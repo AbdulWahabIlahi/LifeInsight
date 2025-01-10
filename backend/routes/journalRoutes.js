@@ -1,44 +1,56 @@
-const express = require("express");
+const express = require('express');
+const sqlite3 = require('sqlite3').verbose();
+
 const router = express.Router();
-const sqlite3 = require("sqlite3").verbose();
 
-const db = new sqlite3.Database("./database/journal.db");
-// Get all journal entries
-router.get("/", (req, res) => {
-  const query = "SELECT * FROM Journal";
-  db.all(query, [], (err, rows) => {
+// Connect to database
+const db = new sqlite3.Database('./database/journal.db', (err) => {
     if (err) {
-      return res.status(500).json({ error: err.message });
+        console.error('Error opening database', err.message);
+    } else {
+        console.log('Connected to SQLite database.');
+        db.run(`
+            CREATE TABLE IF NOT EXISTS JournalEntries (
+            EntryID INTEGER PRIMARY KEY AUTOINCREMENT,
+            EntryDate DATE NOT NULL,
+            ToDoList TEXT,
+            MorningMood INTEGER CHECK(MorningMood BETWEEN 1 AND 10),
+            SleepScore INTEGER CHECK(SleepScore BETWEEN 1 AND 10),
+            DreamNotes TEXT,
+            HungerLevel INTEGER CHECK(HungerLevel BETWEEN 1 AND 10)
+            );
+        `);
     }
-    res.json(rows);
-  });
 });
 
-// Add a new journal entry
-router.post("/journal", (req, res) => {
-  const { EntryDate, ToDoList, MorningMood, SleepScore, DreamNotes, HungerLevel } = req.body;
-  const query = `INSERT INTO Journal (EntryDate, ToDoList, MorningMood, SleepScore, DreamNotes, HungerLevel)
-                 VALUES (?, ?, ?, ?, ?, ?)`;
-  const values = [EntryDate, ToDoList, MorningMood, SleepScore, DreamNotes, HungerLevel];
+// POST Route - Add Journal Entry
+router.post('/', (req, res) => {
+    const { entryDate,ToDoList, MorningMood, SleepScore, DreamNotes,HungerLevel } = req.body;
 
-  db.run(query, values, function (err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json({ message: "Entry added", id: this.lastID });
-  });
+    const sql = `INSERT INTO JournalEntries (entryDate,ToDoList, MorningMood, SleepScore, DreamNotes,HungerLevel) VALUES (?, ?, ?,?, ?, ?)`;
+    const values = [entryDate,ToDoList, MorningMood, SleepScore, DreamNotes,HungerLevel];
+
+    db.run(sql, values, function (err) {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.status(201).json({ message: 'Journal entry added!', id: this.lastID });
+        }
+    });
 });
 
-// Delete a journal entry
-router.delete("/:id", (req, res) => {
-  const { id } = req.params;
-  const query = "DELETE FROM Journal WHERE EntryID = ?";
-  db.run(query, [id], function (err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json({ message: "Entry deleted" });
-  });
+// GET Route - Fetch All Journal Entries
+router.get('/', (req, res) => {
+    const sql = `SELECT * FROM JournalEntries`;
+
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            console.log(rows)
+            res.status(200).json(rows);
+        }
+    });
 });
 
 module.exports = router;
