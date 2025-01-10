@@ -1,54 +1,24 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import AddJournal from './components/AddJournal';
+import ViewJournal from './components/ViewJournal';
+import AddMeal from './components/AddMeal';
+import ViewMeal from './components/ViewMeal';
+import AddWorkout from './components/AddWorkout';
+import ViewWorkout from './components/ViewWorkout';
 
 const App = () => {
-    const [entryDate, setEntryDate] = useState('');
-    const [mood, setMood] = useState('');
-    const [sleepScore, setSleepScore] = useState('');
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const data = { entryDate, mood: parseInt(mood), sleepScore: parseInt(sleepScore) };
-
-        try {
-            const response = await axios.post('http://localhost:5000/journal', data);
-            console.log(response.data.message);
-        } catch (error) {
-            console.error('Error adding entry:', error.response ? error.response.data : error.message);
-        }
-    };
-
     return (
-        <div>
-            <h1>Journal Entry</h1>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Date:</label>
-                    <input
-                        type="date"
-                        value={entryDate}
-                        onChange={(e) => setEntryDate(e.target.value)}
-                    />
-                </div>
-                <div>
-                    <label>Mood (1-10):</label>
-                    <input
-                        type="number"
-                        value={mood}
-                        onChange={(e) => setMood(e.target.value)}
-                    />
-                </div>
-                <div>
-                    <label>Sleep Score (1-10):</label>
-                    <input
-                        type="number"
-                        value={sleepScore}
-                        onChange={(e) => setSleepScore(e.target.value)}
-                    />
-                </div>
-                <button type="submit">Add Entry</button>
-            </form>
-        </div>
+        <Router>
+            <Routes>
+                <Route path="/" element={<AddJournal />} />
+                <Route path="/view" element={<ViewJournal />} />
+                <Route path="/meal" element={<AddMeal />} />
+                <Route path="/mealview" element={<ViewMeal />} />
+                <Route path="/workout" element={<AddWorkout />} />
+                <Route path="/workoutview" element={<ViewWorkout />} />
+            </Routes>
+        </Router>
     );
 };
 
